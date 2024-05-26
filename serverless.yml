@@ -1,0 +1,67 @@
+service: book-service
+
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  environment:
+    BOOKS_TABLE: ${self:service}-books # Ime tabele za knjige
+
+plugins:
+  - serverless-offline
+  - serverless-localstack
+
+custom:
+  localstack:
+    stages:
+      - local
+
+functions:
+  createBook:
+    handler: handler.createBook
+    events:
+      - http:
+          path: /books
+          method: post
+  getAllBooks:
+    handler: handler.getAllBooks #moje funkcije
+    events:
+      - http:
+          path: /books
+          method: get
+  getBookById:
+    handler: handler.getBookById
+    events:
+      - http:
+          path: /books/{id}
+          method: get
+  updateBook:
+    handler: handler.updateBook
+    events:
+      - http:
+          path: /books/{id}
+          method: put
+  deleteBook:
+    handler: handler.deleteBook
+    events:
+      - http:
+          path: /books/{id}
+          method: delete
+
+resources:
+  Resources:
+    BooksTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.BOOKS_TABLE}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
